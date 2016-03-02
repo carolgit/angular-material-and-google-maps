@@ -62,9 +62,17 @@
         <p>{{ul.selected.content}}</p>
         <div ng-controller="mapController">
           <ui-gmap-google-map center='map.center' zoom='map.zoom'>
-            <ui-gmap-circle ng-repeat="c in circles track by c.id" center="c.center" stroke="c.stroke" fill="c.fill" 
-            radius="c.radius" visible="c.visible" geodesic="c.geodesic" editable="c.editable" draggable="c.draggable" clickable="c.clickable" control="c.control"></ui-gmap-circle>
+           <!--  <ui-gmap-circle ng-repeat="c in circles track by c.id" center="c.center" stroke="c.stroke" fill="c.fill" 
+            radius="c.radius" visible="c.visible" geodesic="c.geodesic" editable="c.editable" draggable="c.draggable" clickable="c.clickable" control="c.control"></ui-gmap-circle> -->
+            <ui-gmap-drawing-manager options="drawingManagerOptions" control="drawingManagerControl">
+            </ui-gmap-drawing-manager>
           </ui-gmap-google-map>
+          <div style="display:block;z-index:100;position:absolute;bottom:30px;left:3px;width:380px;height:38px;background:white;">
+            <label>Show drawing manager (via options)? 
+            <input type="checkbox" ng-model="drawingManagerOptions.drawingControl"/></label><br/>
+            <label>Allow marker and circle drawing modes (via control)? 
+            <input type="checkbox" ng-model="markersAndCircleFlag"/></label>
+          </div>
         </div>
         <md-button class="contact" md-no-ink ng-click="ul.makeContact(ul.selected)" aria-label="Share with {{ ul.selected.name }}">
           <md-tooltip>Contact {{ ul.selected.name }}</md-tooltip>
@@ -80,7 +88,7 @@
     <script src="../node_modules/angular-aria/angular-aria.js"></script>
     <script type="text/javascript" src="../node_modules/angular-material/angular-material.js"></script>
     <script src="../node_modules/angular-google-maps/dist/angular-google-maps.min.js"></script>
-    <script src='//maps.googleapis.com/maps/api/js'></script>
+    <script src='//maps.googleapis.com/maps/api/js?libraries=drawing'></script>
 
     <script src="./src/users/Users.js"></script>
     <script src="./src/users/UserController.js"></script>
@@ -113,33 +121,68 @@
       app.controller('mapController', function ($scope) {
           $scope.map = { center: { latitude: 45, longitude: -73 }, zoom: 8 };
           $scope.options = {scrollwheel: false};
-          $scope.circles = [
-            {
-                id: 1,
-                center: {
-                    latitude: 44,
-                    longitude: -108
-                },
-                radius: 500000,
-                stroke: {
-                    color: '#08B21F',
-                    weight: 2,
-                    opacity: 1
-                },
-                fill: {
-                    color: '#08B21F',
-                    opacity: 0.5
-                },
-                geodesic: true, // optional: defaults to false
-                draggable: true, // optional: defaults to false
-                clickable: true, // optional: defaults to true
-                editable: true, // optional: defaults to false
-                visible: true, // optional: defaults to true
-                control: {}
+        //   $scope.circles = [
+        //     {
+        //         id: 1,
+        //         center: {
+        //             latitude: 44,
+        //             longitude: -108
+        //         },
+        //         radius: 500000,
+        //         stroke: {
+        //             color: '#08B21F',
+        //             weight: 2,
+        //             opacity: 1
+        //         },
+        //         fill: {
+        //             color: '#08B21F',
+        //             opacity: 0.5
+        //         },
+        //         geodesic: true, // optional: defaults to false
+        //         draggable: true, // optional: defaults to false
+        //         clickable: true, // optional: defaults to true
+        //         editable: true, // optional: defaults to false
+        //         visible: true, // optional: defaults to true
+        //         control: {}
+        //     }
+        // ];
+         $scope.drawingManagerOptions = {
+          drawingMode: google.maps.drawing.OverlayType.MARKER,
+          drawingControl: true,
+          drawingControlOptions: {
+            position: google.maps.ControlPosition.TOP_CENTER,
+              drawingModes: [
+                google.maps.drawing.OverlayType.MARKER,
+                google.maps.drawing.OverlayType.CIRCLE,
+                google.maps.drawing.OverlayType.POLYGON,
+                google.maps.drawing.OverlayType.POLYLINE,
+                google.maps.drawing.OverlayType.RECTANGLE
+              ]
+          },
+          circleOptions: {
+            fillColor: '#ffff00',
+              fillOpacity: 1,
+              strokeWeight: 5,
+              clickable: false,
+              editable: true,
+              zIndex: 1
             }
-        ];
-          console.log("entra no controller");
-       });
+          };
+        $scope.markersAndCircleFlag = true;
+        $scope.drawingManagerControl = {};
+        $scope.$watch('markersAndCircleFlag', function() {
+          if (!$scope.drawingManagerControl.getDrawingManager) {
+            return;
+          }
+          var controlOptions = angular.copy($scope.drawingManagerOptions);
+          if (!$scope.markersAndCircleFlag) {
+            controlOptions.drawingControlOptions.drawingModes.shift();
+            controlOptions.drawingControlOptions.drawingModes.shift();
+          }
+          $scope.drawingManagerControl.getDrawingManager().setOptions(controlOptions);
+                console.log("entra no controller");
+             });
+        });
     </script>
 
   </body>
